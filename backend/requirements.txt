@@ -8,3 +8,7 @@ paramiko>=3.3,<4.0
 
 # Optional background jobs
 celery>=5.3,<6.0
+
+# Deployment
+gunicorn>=21.2,<22.0
+dj-database-url>=2.2,<3.0

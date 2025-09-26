@@ -115,7 +115,66 @@ El workflow `.github/workflows/frontend-deploy.yml` compila la SPA y la publica 
 
 El workflow fija automáticamente `DEPLOY_BASE` a `/<nombre-del-repositorio>/`, que es lo que espera GitHub Pages. Si usás un dominio personalizado, podés añadir un secret opcional `DEPLOY_BASE` con `/` y editar el workflow para exportarlo.
 
-> GitHub Pages sólo sirve contenido estático. El backend Django debe desplegarse en otro servicio (Railway, Render, EC2, etc.) y exponer públicamente `/api`. Ajustá CORS para permitir el dominio donde publiques la SPA.
+> GitHub Pages sólo sirve contenido estático. El backend Django debe desplegarse en otro servicio (Fly.io, Railway, Render, EC2, etc.) y exponer públicamente `/api`. Ajustá CORS para permitir el dominio donde publiques la SPA.
+
+### Deploy del backend en Fly.io
+
+El repositorio incluye un `Dockerfile` (`backend/Dockerfile`), un script de arranque (`backend/start.sh`) y un `fly.toml` base para subir Django a [Fly.io](https://fly.io/).
+
+1. **Instalá la CLI** (`curl -L https://fly.io/install.sh | sh`) y autenticá la sesión con `fly auth login`.
+2. **Editá `fly.toml`**: cambiá `app = "escaneo-productos"` por un nombre único y, si hace falta, ajustá `primary_region`.
+3. **Creá la app y el volumen**:
+
+   ```bash
+   fly apps create <tu-app>
+   fly volumes create products_data --app <tu-app> --size 1 --region <region>
+   ```
+
+4. **Definí los secretos** (Fly los encripta):
+
+   ```bash
+   fly secrets set \
+     DJANGO_SECRET_KEY="$(openssl rand -base64 48)" \
+     DJANGO_ALLOWED_HOSTS="tu-dominio.com" \
+     DJANGO_DB_PATH=/data/db.sqlite3 \
+     SFTP_HOST=35.174.226.128 \
+     SFTP_PORT=22 \
+     SFTP_USER=ubuntu \
+     SFTP_REMOTE_PATH=/home/ubuntu/articulos/xmlArticulosSuizaOutdoor.xml \
+     XML_LOCAL_PATH=/data/products.xml \
+     SFTP_KEY_PATH=/data/suiza_key.pem \
+     SFTP_PRIVATE_KEY_B64="$(base64 < ~/Downloads/suiza_key.pem | tr -d '\n')"
+   ```
+
+   Si preferís Postgres administrado, agregá `DATABASE_URL` (Fly Postgres o externos) y remové `DJANGO_DB_PATH`.
+
+5. **Deploy**:
+
+   ```bash
+   fly deploy
+   ```
+
+   El `release_command` ejecuta las migraciones y el volumen `products_data` guarda `db.sqlite3` + `products.xml`.
+
+6. **Sincronización periódica**: Fly permite programar máquinas. Buscá el `IMAGE` de la última release (`fly machines list --app <tu-app>`) y creá una máquina cron que ejecute el comando cada 30 minutos:
+
+   ```bash
+   fly machine run \
+     --app <tu-app> \
+     --region <region> \
+     --schedule "*/30 * * * *" \
+     --select "volume=products_data" \
+     <imagen> \
+     -- /bin/bash -lc "python manage.py sync_products_from_sftp"
+   ```
+
+   Para sincronizaciones puntuales:
+
+   ```bash
+   fly ssh console --app <tu-app> --command "python manage.py sync_products_from_sftp"
+   ```
+
+> Recordá usar la URL del backend (`https://<tu-app>.fly.dev/api`) en `VITE_API_URL` para que la SPA publicada consuma la API correcta.
 
 ## Próximos pasos sugeridos
 
