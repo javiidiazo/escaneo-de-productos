@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+.env
+venv/
+
+# Django
+staticfiles/
+/media
+backend/data/products.xml
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# macOS
+.DS_Store
