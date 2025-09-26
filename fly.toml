@@ -1,5 +1,5 @@
-app = "escaneo-productos"
-primary_region = "scl"
+app = "suiza-product-scanner"
+primary_region = "gru"
 
 [build]
   dockerfile = "backend/Dockerfile"
