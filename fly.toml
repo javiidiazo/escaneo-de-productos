@@ -24,6 +24,11 @@ primary_region = "gru"
   min_machines_running = 1
   processes = ["app"]
 
+[vm]
+  memory = "512"
+  cpu_kind = "shared"
+  cpus = 1
+
 [checks]
   [checks.health]
     type = "http"
