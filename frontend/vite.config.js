@@ -5,7 +5,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
   return {
-    base: env.DEPLOY_BASE || '/',
+    base: mode === 'production' ? env.STATIC_BASE_URL || '/static/frontend/' : '/',
     plugins: [react()],
     server: {
       port: 5173,
