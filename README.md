@@ -176,6 +176,16 @@ El repositorio incluye un `Dockerfile` (`backend/Dockerfile`), un script de arra
 
 > Recordá usar la URL del backend (`https://<tu-app>.fly.dev/api`) en `VITE_API_URL` para que la SPA publicada consuma la API correcta.
 
+#### Scripts para operar en el free tier
+
+En `scripts/` vas a encontrar utilidades para manejar la app sin dejarla encendida todo el día:
+
+- `scripts/start_api.sh`: escala la app a 1 máquina y espera a que el healthcheck pase (usálo al iniciar la jornada).
+- `scripts/stop_api.sh`: baja la app a 0 máquinas para no consumir cuota cuando no haya clientes.
+- `scripts/sync_products.sh`: crea una máquina temporal con 2 GB de RAM, monta el volumen `products_data` y ejecuta `python manage.py sync_products_from_sftp`.
+
+Todos los scripts requieren `flyctl` y `jq` disponibles en tu terminal.
+
 ## Próximos pasos sugeridos
 
 1. Conectar el comando `sync_products_from_sftp` con el servidor SFTP real y validar el esquema del XML productivo.
